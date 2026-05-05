@@ -1,30 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { id } = await params
-  const proposal = await db.proposal.findFirst({
-    where: { id, createdById: session.user.id },
-  })
+  const proposal = await db.proposal.findUnique({ where: { id } })
   if (!proposal) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-
   return NextResponse.json(proposal)
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { id } = await params
   const body = await req.json()
 
-  const proposal = await db.proposal.updateMany({
-    where: { id, createdById: session.user.id },
+  await db.proposal.update({
+    where: { id },
     data: {
       companyName: body.companyName,
       companyPhone: body.companyPhone,
@@ -51,15 +40,11 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     },
   })
 
-  return NextResponse.json({ updated: proposal.count })
+  return NextResponse.json({ updated: true })
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const { id } = await params
-  await db.proposal.deleteMany({ where: { id, createdById: session.user.id } })
-
+  await db.proposal.delete({ where: { id } })
   return NextResponse.json({ deleted: true })
 }

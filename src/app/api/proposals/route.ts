@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { nanoid } from 'nanoid'
 
 export async function GET() {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const proposals = await db.proposal.findMany({
-    where: { createdById: session.user.id },
     orderBy: { createdAt: 'desc' },
     select: {
       id: true, token: true, status: true,
@@ -20,17 +14,26 @@ export async function GET() {
       createdAt: true, sentAt: true, viewedAt: true, approvedAt: true,
     },
   })
-
   return NextResponse.json(proposals)
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions)
-  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
   const body = await req.json()
-  const token = nanoid(12)
 
+  // Get or create a default system user for trial mode
+  let user = await db.user.findFirst()
+  if (!user) {
+    const bcrypt = await import('bcryptjs')
+    user = await db.user.create({
+      data: {
+        name: 'Admin',
+        email: 'admin@tnsolarsolutions.in',
+        password: await bcrypt.hash('Admin@123', 12),
+      },
+    })
+  }
+
+  const token = nanoid(12)
   const proposal = await db.proposal.create({
     data: {
       token,
@@ -56,7 +59,7 @@ export async function POST(req: NextRequest) {
       treesEquivalent: Number(body.treesEquivalent),
       carDistanceAvoidedKm: Number(body.carDistanceAvoidedKm),
       notes: body.notes || null,
-      createdById: session.user.id,
+      createdById: user.id,
     },
   })
 
