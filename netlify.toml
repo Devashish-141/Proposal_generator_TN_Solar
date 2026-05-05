@@ -4,6 +4,8 @@
 [build.environment]
   NODE_VERSION = "20"
   NEXT_DISABLE_ESLINT = "1"
+  NEXT_PUBLIC_SUPABASE_URL = "https://aiuvtglosvjvxozayoie.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "sb_publishable_8PQ-voBBd5AkAsLtS9oEQw_AmuI3XBr"
 
 [functions]
   node_bundler = "esbuild"
