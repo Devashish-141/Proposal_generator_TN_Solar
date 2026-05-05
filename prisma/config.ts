@@ -1,10 +1,13 @@
-// @ts-nocheck — Prisma v7 config types not fully stable yet
+// @ts-nocheck — Prisma v7 types not fully stable
 import { defineConfig } from 'prisma/config'
 import { PrismaPg } from '@prisma/adapter-pg'
 
 export default defineConfig({
   earlyAccess: true,
   schema: './schema.prisma',
+  datasource: {
+    url: process.env.DATABASE_URL,
+  },
   migrate: {
     async adapter(env) {
       const { Pool } = await import('pg')
